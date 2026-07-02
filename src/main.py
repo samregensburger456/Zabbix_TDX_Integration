@@ -23,6 +23,9 @@ ZABBIX_API_TOKEN = os.getenv("ZABBIX_API_TOKEN")
 #define the URL for the zabbix API file
 ZABBIX_API_URL = ZABBIX_URL + "/api_jsonrpc.php"
 
+#define host group name in Zabbix for API to pull SSL cert expirations from
+WEBSITES_HOST_GROUP_NAME = os.getenv("WEBSITES_HOST_GROUP_NAME")
+
 #Create the Zabbix API Object
 #AT THIS TIME, ZABBIX DOES NOT HAVE AN SSL CERT ISSUED BY A CA, THEREFORE VALIDATE CERTS IS SET TO FALSE. SET TO TRUE BEFORE PUTTING THIS SCRIPT INTO PRODUCTION
 zabbixAPI = ZabbixAPI(url=ZABBIX_API_URL, validate_certs = False)
@@ -35,7 +38,7 @@ print("Connected! API Version:", zabbixAPI.api_version())
 
 #create an object for the 'Websites' Zabbix group
 websitesGroup = zabbixAPI.hostgroup.get(
-    filter={"name": "Websites"},
+    filter={"name": WEBSITES_HOST_GROUP_NAME},
     output=["groupid", "name"]
 )
 
