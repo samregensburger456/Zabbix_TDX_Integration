@@ -60,13 +60,26 @@ for ticketType in ticketTypes:
     if ticketType['Name'] == TDX_TICKET_TYPE_NAME:
         TICKET_TYPE_ID = ticketType['ID']
 
+if TICKET_TYPE_ID == -1:
+    print("ticket type name "+TDX_TICKET_TYPE_NAME+" does not exist | please reconfigure in .env")
+
 #get the Account ID via account name of the account the ticket will be created under
 accounts = TDX_INSTANCE.getAccountID(TDX_ACCOUNT_NAME)
-ACCOUNT_ID = accounts[0]["ID"]
+
+#catch index out of range error and print that this means TDX_TICKET_TYPE_NAME is not a real TICKET TYPE NAME in TDX
+try:
+    ACCOUNT_ID = accounts[0]["ID"]
+except IndexError:
+    print("account name "+TDX_ACCOUNT_NAME+" does not exist | please reconfigure in .env")
 
 #get the group ID of the TDX_RESPONSIBLE_GROUP_NAME
 group = TDX_INSTANCE.getGroup(TDX_RESPONSIBLE_GROUP_NAME)
-RESPONSIBLE_GROUP_ID = group[0]["ID"]
+#catch index out of range error and print that this means value of TDX_RESPONSIBLE_GROUP_NAME does not exist in TDX
+try:
+    RESPONSIBLE_GROUP_ID = group[0]["ID"]
+except IndexError:
+    print("group name "+TDX_RESPONSIBLE_GROUP_NAME+" does not exist | please reconfigure in .env")
+
 ###########################################################################
 ###########################################################################
 ###########################################################################
@@ -86,7 +99,9 @@ hosts = zabbixAPI.host.get(
     output=["hostid", "host", "name"]
 )
 
-#iterate through hosts array
+#this block of code will iterate through all of the hosts in the group that contains info on website certs in zabbix
+#if a cert in any of the websites in this host group will expire in less than 14 days, it will put in a ticket in TDX
+#this ticket will contain the name of the website, and in how many days the SSL cert will expire at the time of ticket creation
 for host in hosts:
     #put all items from current host into items array
     items = zabbixAPI.item.get(
@@ -104,4 +119,4 @@ for host in hosts:
         daysLeft = (expiry - datetime.now()).days
         #call the ticket creation function from the createTicket module.
         if daysLeft < 14:
-            print(host["host"])
+            TDX_INSTANCE.createTicket("SSL Cert expiring for "+host["host"],host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days.",TICKET_TYPE_ID,ACCOUNT_ID,RESPONSIBLE_GROUP_ID)
