@@ -9,7 +9,7 @@ import os
 #import datetime for converting times recieved from zabbix to a human readable format
 from datetime import datetime
 #import ticket creation module
-import TDX_Wrappers
+import tdx_wrappers
 
 #load the .env file and specify that it is one directory higher in the project tree than the folder this file is located
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -25,6 +25,15 @@ ZABBIX_API_URL = ZABBIX_URL + "/api_jsonrpc.php"
 
 #define host group name in Zabbix for API to pull SSL cert expirations from
 WEBSITES_HOST_GROUP_NAME = os.getenv("WEBSITES_HOST_GROUP_NAME")
+
+#URL to your TDX Environment
+TDX_URL=os.getenv("TDX_URL")
+
+#TDX API user's username
+TDX_USERNAME=os.getenv("TDX_USERNAME")
+
+#TDX API user's password
+TDX_PASSWORD=os.getenv("TDX_PASSWORD")
 
 #Create the Zabbix API Object
 #AT THIS TIME, ZABBIX DOES NOT HAVE AN SSL CERT ISSUED BY A CA, THEREFORE VALIDATE CERTS IS SET TO FALSE. SET TO TRUE BEFORE PUTTING THIS SCRIPT INTO PRODUCTION
@@ -71,6 +80,6 @@ for host in hosts:
         if daysLeft < 14:
             print(host["host"])
 
-
-
+#create a new TDX instance object for easy ticket creation
+TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD)
 
