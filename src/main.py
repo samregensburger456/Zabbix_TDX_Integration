@@ -119,4 +119,6 @@ for host in hosts:
         daysLeft = (expiry - datetime.now()).days
         #call the ticket creation function from the createTicket module.
         if daysLeft < 14:
+            #A BLOCK SHOULD BE INSERTED HERE TO CHECK IF A TICKET ALREADY EXISTS FOR THIS SSL CERT SO DUPLICATE TICKETS ARE NOT MADE
+            #IF A TICKET ALREADY EXISTS FOR THE SSL CERT, IT SHOULD UPDATE THE DESCRIPTION WITH AN UPDATED TIME UNTIL EXPIRATION
             TDX_INSTANCE.createTicket("SSL Cert expiring for "+host["host"],host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days.",TICKET_TYPE_ID,ACCOUNT_ID,RESPONSIBLE_GROUP_ID)
