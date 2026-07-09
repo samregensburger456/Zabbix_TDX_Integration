@@ -62,4 +62,7 @@ class TDX_Instance:
         response = requests.post(self.API_URL+"/2437/tickets",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response
 
-
+#Custom Top Level Error Class for TDX Errors. 
+class TDX_Error(Exception):
+    def __init__(self,message):
+        self.message = message 
