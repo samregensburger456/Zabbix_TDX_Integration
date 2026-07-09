@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 #import ticket creation module
 import tdx_wrappers
+#import file logging
 
 #load the .env file and specify that it is one directory higher in the project tree than the folder this file is located
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -34,15 +35,17 @@ TDX_ACCOUNT_NAME=os.getenv("TDX_ACCOUNT_NAME")
 #the name of the Responsible group the SSL cert ticket will be defined under
 TDX_RESPONSIBLE_GROUP_NAME=os.getenv("TDX_RESPONSIBLE_GROUP_NAME")
 
-#Create the Zabbix API Object
-#AT THIS TIME, ZABBIX DOES NOT HAVE AN SSL CERT ISSUED BY A CA, THEREFORE VALIDATE CERTS IS SET TO FALSE. SET TO TRUE BEFORE PUTTING THIS SCRIPT INTO PRODUCTION
-zabbixAPI = ZabbixAPI(url=ZABBIX_API_URL, validate_certs = False)
 
-#Login to zabbix using the API token
+#Exception to throw if connection to Zabbix Server fails
+try:
+    #Create the Zabbix API Object
+    #AT THIS TIME, ZABBIX DOES NOT HAVE AN SSL CERT ISSUED BY A CA, THEREFORE VALIDATE CERTS IS SET TO FALSE. SET TO TRUE BEFORE PUTTING THIS SCRIPT INTO PRODUCTION
+    zabbixAPI = ZabbixAPI(url=ZABBIX_API_URL, validate_certs = False)
+except Exception:
+    raise Exception("Error connecting to Zabbix Server. Please ensure correct ZABBIX_URL in .env and check SSL cert validity")
+    
+#Authenticate with Zabbix using API Token
 zabbixAPI.login(token=ZABBIX_API_TOKEN)
-
-#query the zabbix api object to make a request for the API version
-print("Connected! API Version:", zabbixAPI.api_version())
 
 #create a new TDX instance object for easy ticket creation
 TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD)
@@ -61,7 +64,7 @@ for ticketType in ticketTypes:
         TICKET_TYPE_ID = ticketType['ID']
 
 if TICKET_TYPE_ID == -1:
-    print("ticket type name "+TDX_TICKET_TYPE_NAME+" does not exist | please reconfigure in .env")
+    raise tdx_wrappers.TDX_Error("ticket type name "+TDX_TICKET_TYPE_NAME+" does not exist | please reconfigure in .env")
 
 #get the Account ID via account name of the account the ticket will be created under
 accounts = TDX_INSTANCE.getAccountID(TDX_ACCOUNT_NAME)
@@ -70,7 +73,7 @@ accounts = TDX_INSTANCE.getAccountID(TDX_ACCOUNT_NAME)
 try:
     ACCOUNT_ID = accounts[0]["ID"]
 except IndexError:
-    print("account name "+TDX_ACCOUNT_NAME+" does not exist | please reconfigure in .env")
+    raise tdx_wrappers.TDX_Error("account name "+TDX_ACCOUNT_NAME+" does not exist | please reconfigure in .env")
 
 #get the group ID of the TDX_RESPONSIBLE_GROUP_NAME
 group = TDX_INSTANCE.getGroup(TDX_RESPONSIBLE_GROUP_NAME)
@@ -78,7 +81,7 @@ group = TDX_INSTANCE.getGroup(TDX_RESPONSIBLE_GROUP_NAME)
 try:
     RESPONSIBLE_GROUP_ID = group[0]["ID"]
 except IndexError:
-    print("group name "+TDX_RESPONSIBLE_GROUP_NAME+" does not exist | please reconfigure in .env")
+    raise tdx_wrappers.TDX_Error("group name "+TDX_RESPONSIBLE_GROUP_NAME+" does not exist | please reconfigure in .env")
 
 ###########################################################################
 ###########################################################################
@@ -90,8 +93,13 @@ websitesGroup = zabbixAPI.hostgroup.get(
     output=["groupid", "name"]
 )
 
-#ZABBIX: get the group id of the zabbixwebsites group
-groupID = websitesGroup[0]["groupid"]
+#try catch for if websites group defined in .env does not exist in zabbix
+try:
+    #ZABBIX: get the group id of the zabbixwebsites group
+    groupID = websitesGroup[0]["groupid"]
+except IndexError:
+    raise Exception("defined Websites Group does not exist in zabbix. Please check WEBSITES_HOST_GROUP_NAME in .env")
+
 
 #get all hosts from the 'Websites' group and put them into an array
 hosts = zabbixAPI.host.get(
