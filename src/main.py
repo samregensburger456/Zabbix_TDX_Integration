@@ -165,7 +165,7 @@ try:
     main()
     #if the program erred the last time it ran and an email was send, but this time it ran successfully, delete the email flag so the next time it errs, the email flag can be raised again
     if emailFlag.exists():
-        emailFlag.unlink
+        emailFlag.unlink()
 except Exception as exception:
     #log the error
     logger.exception(exception)
