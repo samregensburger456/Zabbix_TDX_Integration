@@ -63,7 +63,10 @@ def main():
     TDX_RESPONSIBLE_GROUP_NAME=os.getenv("TDX_RESPONSIBLE_GROUP_NAME")
     #the name of the ticket status that indicates an SSL cert ticket is still active
     TDX_ACTIVE_STATUS_NAME=os.getenv("TDX_ACTIVE_STATUS_NAME")
-
+    #the TDX app ID
+    TDX_APP_ID=os.getenv("TDX_APP_ID")
+    #the minimum number of days an SSL cert can get to before it will trigger a ticket alert | also needs to be cast to int because the .getenv will create it as a string by default
+    SSL_MIN_DAYS_BEFORE_ALERT=int(os.getenv("SSL_MIN_DAYS_BEFORE_ALERT"))
 
     #Exception to throw if connection to Zabbix Server fails
     try:
@@ -77,7 +80,7 @@ def main():
     zabbixAPI.login(token=ZABBIX_API_TOKEN)
 
     #create a new TDX instance object for easy ticket creation
-    TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD,"2437")
+    TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD,TDX_APP_ID)
 
     #ID of ticket Type in TDX that should be assigned to the created ticket
     TICKET_TYPE_ID = -1
@@ -174,11 +177,11 @@ def main():
             daysLeft = (expiry - datetime.now()).days
 
             #check if the days left on this host is less than the minimum days before alert
-            if daysLeft < 140:
+            if daysLeft < SSL_MIN_DAYS_BEFORE_ALERT:
                 #variable to denote whether the ticket exists or not so we know whether to make a new one or if we can just modify an existing one
                 ticketExists = False
                 #Description string to be used as the description for the ticket
-                description = host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days. update1"
+                description = host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days. New Update"
                 #iterate through the active SSL tickets. if a ticket for the current host already exists, simply modify the the description to update the number of days left until it expires
                 for ticket in activeSSLTickets:
                     if host['host'] in ticket['Title']:
