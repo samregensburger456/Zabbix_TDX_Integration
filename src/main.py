@@ -6,7 +6,7 @@ from logging.handlers import RotatingFileHandler
 logger = logging.getLogger("main_error_logger")
 logger.setLevel(logging.ERROR)
 
-#create a new rotating file handler so the logs don't fill up indeninitely and set the max file size to 1 megabyte
+#create a new rotating file handler so the logs don't fill up indefinitely and set the max file size to 1 megabyte
 handler = RotatingFileHandler(
     "logs/errors.log",
     maxBytes = 1024 * 1024,
@@ -45,7 +45,7 @@ def main():
     #retrieve the necessary Zabbix information from the .env file and define them in constants
     ZABBIX_URL = os.getenv("ZABBIX_URL")
     ZABBIX_API_TOKEN = os.getenv("ZABBIX_API_TOKEN")
-    WEBSITES_HOST_GROUP_NAME = os.getenv("WEBSITES_HOST_GROUP_NAME")
+    ZABBIX_WEBSITES_HOST_GROUP_NAME = os.getenv("ZABBIX_WEBSITES_HOST_GROUP_NAME")
 
     #define a constant specifically for accessing the API from the base URL. Should probably remove the Base URL when this is complete if it is not used and only this is used
     ZABBIX_API_URL = ZABBIX_URL + "/api_jsonrpc.php"
@@ -140,7 +140,7 @@ def main():
 
     #ZABBIX: create an object for the 'Websites' Zabbix group
     websitesGroup = zabbixAPI.hostgroup.get(
-        filter={"name": WEBSITES_HOST_GROUP_NAME},
+        filter={"name": ZABBIX_WEBSITES_HOST_GROUP_NAME},
         output=["groupid", "name"]
     )
 
