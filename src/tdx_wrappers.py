@@ -63,13 +63,15 @@ class TDX_Instance:
         response = requests.post(self.API_URL+self.APP_ID+"/tickets",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response
     #method used to get a list of all tickets that are active of a specific type
-    def getTicketsByTypeID(self,typeID):
+    def getActiveTicketsByTypeID(self,typeID,activeStatusID,maxResults):
         #the payload is a request to search for a tickets that are both active and of a specific type
         payload = {
-            "TypeIDs": typeID
+            "TypeIDs": [typeID],
+            "StatusIDs": [activeStatusID],
+            "MaxResults": maxResults,
         }
         response = requests.post(self.API_URL+self.APP_ID+"/tickets/search",json=payload,headers=self.AUTHENTICATION_HEADER)
-        return response
+        return response.json()
     #A method to get a list of all status in the TDX app
     def getStatuses(self):
         response = requests.get(self.API_URL+self.APP_ID+"/tickets/statuses",headers=self.AUTHENTICATION_HEADER)
@@ -78,7 +80,7 @@ class TDX_Instance:
     def createActiveTicketType(self,typeName):
         payload = {
             "Name": typeName,
-            "IsActive": "true"
+            "IsActive": "true",
         }
         response = requests.post(self.API_URL+self.APP_ID+"/tickets/types",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response
