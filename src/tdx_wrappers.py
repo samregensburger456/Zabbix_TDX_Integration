@@ -72,8 +72,8 @@ class TDX_Instance:
         return response
     #A method to get a list of all status in the TDX app
     def getStatuses(self):
-        response = requests.get(self.API_URL+self.APP_ID+"/tickets/statuses")
-        return response
+        response = requests.get(self.API_URL+self.APP_ID+"/tickets/statuses",headers=self.AUTHENTICATION_HEADER)
+        return response.json()
     
 
 #Custom Top Level Error Class for TDX Errors. 

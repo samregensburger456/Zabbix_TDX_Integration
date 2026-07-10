@@ -61,6 +61,8 @@ def main():
     TDX_ACCOUNT_NAME=os.getenv("TDX_ACCOUNT_NAME")
     #the name of the Responsible group the SSL cert ticket will be defined under
     TDX_RESPONSIBLE_GROUP_NAME=os.getenv("TDX_RESPONSIBLE_GROUP_NAME")
+    #the name of the ticket status that indicates an SSL cert ticket is still active
+    TDX_ACTIVE_STATUS_NAME=os.getenv("TDX_ACTIVE_STATUS_NAME")
 
 
     #Exception to throw if connection to Zabbix Server fails
@@ -83,6 +85,8 @@ def main():
     ACCOUNT_ID = -1
     #ID of the account in TDX that should be assigned to the created ticket
     RESPONSIBLE_GROUP_ID = -1
+    #ID of the active status in the users TDX environment to be used to check whether an SSL cert ticket is active or not
+    ACTIVE_STATUS_ID = -1
 
     #retrieve all ticket types from TDX and save the ID where ticketType name is the same as TDX_TICKET_TYPE_NAME, since this will be the type we will assign the Zabbix ticket we create to
     ticketTypes = TDX_INSTANCE.getTicketTypes()
@@ -110,10 +114,21 @@ def main():
     except IndexError:
         raise tdx_wrappers.TDX_Error("group name "+TDX_RESPONSIBLE_GROUP_NAME+" does not exist | please reconfigure in .env")
 
-    #find the ID of the Active status for a ticket so we can use it later to only find SSL tickets made by this script that are not resolved
-
-
-    
+    #------------------------------------------------------------------------------------------------------------------------
+    #This block of code will retrieve all statuses from TDX, and search for the ID of the status that is to be used as the Active Status
+    #if an SSL ticket has the active status, this script will not create another SSL cert alert for that ticket, but instead just update the number of days left before the cert expires to be accurate
+    #------------------------------------------------------------------------------------------------------------------------
+    #get json list of all statuses from TDX
+    statuses = TDX_INSTANCE.getStatuses()  
+    #iterate through statuses until the active status defined in the .env is found 
+    #when it is found, assign its value to the ACTIVE_STATUS_ID
+    for status in statuses:
+        if status["Name"] == TDX_ACTIVE_STATUS_NAME:
+            ACTIVE_STATUS_ID = status["ID"]
+    #if the status name does not exist in TDX, throw an error
+    if(ACTIVE_STATUS_ID == -1):
+        raise tdx_wrappers.TDX_Error("Status name "+TDX_ACTIVE_STATUS_NAME+" does not exist | please reconfigure in .env")
+        
 
 
 
