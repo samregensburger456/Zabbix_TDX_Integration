@@ -68,7 +68,7 @@ class TDX_Instance:
         payload = {
             "TypeIDs": [typeID],
             "StatusIDs": [activeStatusID],
-            "MaxResults": maxResults,
+            "MaxResults": maxResults
         }
         response = requests.post(self.API_URL+self.APP_ID+"/tickets/search",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response.json()
@@ -84,7 +84,18 @@ class TDX_Instance:
         }
         response = requests.post(self.API_URL+self.APP_ID+"/tickets/types",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response
-
+    #a method to change a tickets description via its ID
+    def changeTicketDescription(self,ticketID,newDescription):
+        payload = [
+            {
+                "op": "replace",
+                "path": "/Description",
+                "value": newDescription
+            }
+        ]
+        response = requests.patch(self.API_URL+self.APP_ID+"/tickets/"+str(ticketID),json=payload,headers=self.AUTHENTICATION_HEADER)
+        return response
+"Account/department is required.\r\nTicket type is required.\r\nStatus is required.\r\nPriority is required.\r\nA form is required."
 #Custom Top Level Error Class for TDX Errors. 
 class TDX_Error(Exception):
     def __init__(self,message):

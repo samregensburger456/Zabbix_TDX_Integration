@@ -128,10 +128,9 @@ def main():
     #if the status name does not exist in TDX, throw an error
     if(ACTIVE_STATUS_ID == -1):
         raise tdx_wrappers.TDX_Error("Status name "+TDX_ACTIVE_STATUS_NAME+" does not exist | please reconfigure in .env")
-        
 
-
-
+    #an array of all active SSL tickets, meant to be used later to keep inventory over what websites already have SSL alert tickets active    
+    activeSSLTickets = TDX_INSTANCE.getActiveTicketsByTypeID(TICKET_TYPE_ID,ACTIVE_STATUS_ID,100)
     ###########################################################################
     ###########################################################################
     ###########################################################################
@@ -155,7 +154,6 @@ def main():
         groupids=groupID,
         output=["hostid", "host", "name"]
     )
-
     #this block of code will iterate through all of the hosts in the group that contains info on website certs in zabbix
     #if a cert in any of the websites in this host group will expire in less than 14 days, it will put in a ticket in TDX
     #this ticket will contain the name of the website, and in how many days the SSL cert will expire at the time of ticket creation
@@ -174,11 +172,22 @@ def main():
             expiry = datetime.fromtimestamp(int(item["lastvalue"]))
             #get the days left before the certificate expires using datetime conversions
             daysLeft = (expiry - datetime.now()).days
-            #call the ticket creation function from the createTicket module.
-            if daysLeft < 14:
-                #A BLOCK SHOULD BE INSERTED HERE TO CHECK IF A TICKET ALREADY EXISTS FOR THIS SSL CERT SO DUPLICATE TICKETS ARE NOT MADE
-                #IF A TICKET ALREADY EXISTS FOR THE SSL CERT, IT SHOULD UPDATE THE DESCRIPTION WITH AN UPDATED TIME UNTIL EXPIRATION
-                TDX_INSTANCE.createTicket("SSL Cert expiring for "+host["host"],host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days.",TICKET_TYPE_ID,ACCOUNT_ID,RESPONSIBLE_GROUP_ID)
+
+            #check if the days left on this host is less than the minimum days before alert
+            if daysLeft < 140:
+                #variable to denote whether the ticket exists or not so we know whether to make a new one or if we can just modify an existing one
+                ticketExists = False
+                #Description string to be used as the description for the ticket
+                description = host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days. update1"
+                #iterate through the active SSL tickets. if a ticket for the current host already exists, simply modify the the description to update the number of days left until it expires
+                for ticket in activeSSLTickets:
+                    if host['host'] in ticket['Title']:
+                        TDX_INSTANCE.changeTicketDescription(ticket['ID'],description)
+                        ticketExists = True
+                        break
+                #if the ticket for this hosts SSL cert doesn't exist, create one
+                if(not ticketExists):
+                    TDX_INSTANCE.createTicket("SSL Cert expiring for "+host['host'],description,TICKET_TYPE_ID,ACCOUNT_ID,RESPONSIBLE_GROUP_ID)
 
 #variable to store the path to the email flag
 emailFlag = Path("logs/hasEmailed")
