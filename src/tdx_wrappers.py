@@ -74,7 +74,14 @@ class TDX_Instance:
     def getStatuses(self):
         response = requests.get(self.API_URL+self.APP_ID+"/tickets/statuses",headers=self.AUTHENTICATION_HEADER)
         return response.json()
-    
+    #a method to create a new ticket type in TDX
+    def createActiveTicketType(self,typeName):
+        payload = {
+            "Name": typeName,
+            "IsActive": "true"
+        }
+        response = requests.post(self.API_URL+self.APP_ID+"/tickets/types",json=payload,headers=self.AUTHENTICATION_HEADER)
+        return response
 
 #Custom Top Level Error Class for TDX Errors. 
 class TDX_Error(Exception):
