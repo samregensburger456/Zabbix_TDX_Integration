@@ -75,7 +75,7 @@ def main():
     zabbixAPI.login(token=ZABBIX_API_TOKEN)
 
     #create a new TDX instance object for easy ticket creation
-    TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD)
+    TDX_INSTANCE = tdx_wrappers.TDX_Instance(TDX_URL,TDX_USERNAME,TDX_PASSWORD,"2437")
 
     #ID of ticket Type in TDX that should be assigned to the created ticket
     TICKET_TYPE_ID = -1
@@ -85,7 +85,7 @@ def main():
     RESPONSIBLE_GROUP_ID = -1
 
     #retrieve all ticket types from TDX and save the ID where ticketType name is the same as TDX_TICKET_TYPE_NAME, since this will be the type we will assign the Zabbix ticket we create to
-    ticketTypes = TDX_INSTANCE.getTicketTypeID()
+    ticketTypes = TDX_INSTANCE.getTicketTypes()
     for ticketType in ticketTypes:
         if ticketType['Name'] == TDX_TICKET_TYPE_NAME:
             TICKET_TYPE_ID = ticketType['ID']
@@ -109,6 +109,13 @@ def main():
         RESPONSIBLE_GROUP_ID = group[0]["ID"]
     except IndexError:
         raise tdx_wrappers.TDX_Error("group name "+TDX_RESPONSIBLE_GROUP_NAME+" does not exist | please reconfigure in .env")
+
+    #find the ID of the Active status for a ticket so we can use it later to only find SSL tickets made by this script that are not resolved
+
+
+    
+
+
 
     ###########################################################################
     ###########################################################################

@@ -5,10 +5,11 @@ import requests
 #this class will have methods that can do things like creating tickets and searching up information on accounts
 class TDX_Instance:
     #upon instantiation, take the URL to TDX, the API user's username and password, and retrieve the API token for use in later methods
-    def __init__(self,tdxURL,tdxUsername,tdxPassword):
+    def __init__(self,tdxURL,tdxUsername,tdxPassword,appID):
         self.URL = tdxURL
         self.USERNAME = tdxUsername
         self.PASSWORD = tdxPassword
+        self.APP_ID = "/"+appID
 
         #define datatype as json for payload
         headers = {
@@ -38,8 +39,8 @@ class TDX_Instance:
         response = requests.post(self.API_URL+"/accounts/search",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response.json()
     #method for retrieving a list of all ticket types in TDX
-    def getTicketTypeID(self):
-        response = requests.get(self.API_URL+"/2437/tickets/types",headers=self.AUTHENTICATION_HEADER)
+    def getTicketTypes(self):
+        response = requests.get(self.API_URL+self.APP_ID+"/tickets/types",headers=self.AUTHENTICATION_HEADER)
         return response.json()
     #method used for getting information on a specific group in TDX by name
     def getGroup(self,groupName):
@@ -59,8 +60,21 @@ class TDX_Instance:
             "ResponsibleGroupID": responsibleGroupID,
         }
         #post request to create ticket with our custom json payload
-        response = requests.post(self.API_URL+"/2437/tickets",json=payload,headers=self.AUTHENTICATION_HEADER)
+        response = requests.post(self.API_URL+self.APP_ID+"/tickets",json=payload,headers=self.AUTHENTICATION_HEADER)
         return response
+    #method used to get a list of all tickets that are active of a specific type
+    def getTicketsByTypeID(self,typeID):
+        #the payload is a request to search for a tickets that are both active and of a specific type
+        payload = {
+            "TypeIDs": typeID
+        }
+        response = requests.post(self.API_URL+self.APP_ID+"/tickets/search",json=payload,headers=self.AUTHENTICATION_HEADER)
+        return response
+    #A method to get a list of all status in the TDX app
+    def getStatuses(self):
+        response = requests.get(self.API_URL+self.APP_ID+"/tickets/statuses")
+        return response
+    
 
 #Custom Top Level Error Class for TDX Errors. 
 class TDX_Error(Exception):
