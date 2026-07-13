@@ -181,7 +181,7 @@ def main():
                 #variable to denote whether the ticket exists or not so we know whether to make a new one or if we can just modify an existing one
                 ticketExists = False
                 #Description string to be used as the description for the ticket
-                description = host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days. New Update"
+                description = host["host"]+" SSL Certificate expiring in "+str(daysLeft)+" days."
                 #iterate through the active SSL tickets. if a ticket for the current host already exists, simply modify the the description to update the number of days left until it expires
                 for ticket in activeSSLTickets:
                     if host['host'] in ticket['Title']:
