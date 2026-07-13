@@ -1,1 +1,0 @@
-pip install dotenv pathlib zabbix_utils datetime requests
